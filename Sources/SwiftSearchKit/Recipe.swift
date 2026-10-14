@@ -133,7 +133,7 @@ enum Recipe {
         modelDirectory.appendingPathComponent("models/FluidInference/parakeet-tdt-0.6b-v3-coreml")
     }
 
-    static func searchMode(_ profile: Profile) -> SearchMode {
-        profile == .lexical ? .lexicalOnly : .hybrid
+    static func searchMode(_ profile: Profile, reranks: Bool = true) -> SearchMode {
+        profile == .lexical ? .lexicalOnly : reranks ? .hybrid : .retrievalOnly
     }
 }

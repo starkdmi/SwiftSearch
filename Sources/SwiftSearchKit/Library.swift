@@ -467,9 +467,14 @@ public actor Library {
     /// reading it, and an agent that `read_file` refuses must not learn what
     /// an unindexed photo shows by searching with it. The CLI, run by the
     /// user, takes any picture.
+    ///
+    /// `reranks: false` returns retrieval's order without running the
+    /// reranker — a fraction of the time, for a list shown while typing that
+    /// a reranked search then replaces.
     public func search(
         _ text: String, image: String? = nil, imageFromAnywhere: Bool = false,
-        in query: FileQuery = FileQuery(), within file: String? = nil, limit: Int = 10
+        in query: FileQuery = FileQuery(), within file: String? = nil, limit: Int = 10,
+        reranks: Bool = true
     ) async throws -> SearchAnswer {
         var scope: ItemID?
         if let file { scope = try await indexed(file).0 }
@@ -494,7 +499,7 @@ public actor Library {
         // again without the files already found.
         for _ in 0..<(scope == nil ? 4 : 1) {
             var options = SearchOptions(
-                mode: Recipe.searchMode(settings.profile), limit: 200,
+                mode: Recipe.searchMode(settings.profile, reranks: reranks), limit: 200,
                 filter: found.isEmpty
                     ? filter : .and([filter, .not(.or(found.map { .withinParent($0) }))]))
             options.rerankPoolSize = 50
