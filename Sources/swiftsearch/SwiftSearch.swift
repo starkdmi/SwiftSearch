@@ -238,7 +238,7 @@ struct Config: AsyncParsableCommand {
     var location: Switch?
     @Option(help: "Characters of matched text in answers; 0 for none.")
     var snippets: Int?
-    @Option(help: "Where to download models.")
+    @Option(help: "Where to download models, as <directory>/models/<org>/<name>.")
     var modelDirectory: String?
     @Option(
         help: """

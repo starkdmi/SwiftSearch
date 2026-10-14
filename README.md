@@ -235,12 +235,12 @@ $S status
 | `multimodal` | Qwen3-VL-Embedding/Reranker 2B, Parakeet v3 | ~5 GB | their pixels; a picture can be the query |
 
 ```bash
-$S config --profile multimodal     # each profile keeps its own index
-$S config --place-names on         # name places with MapKit: sends coordinates to Apple
-$S config --location off           # keep coordinates out of the index
-$S config --snippets 0             # answers carry paths and times, no quoted text
-$S config --model-directory /Volumes/SSD/models
-$S config --shots off              # keyframes from one candidate a second
+$S config --profile multimodal        # each profile keeps its own index
+$S config --place-names on            # name places with MapKit: sends coordinates to Apple
+$S config --location off              # keep coordinates out of the index
+$S config --snippets 0                # answers carry paths and times, no quoted text
+$S config --model-directory ~/Models  # every download, in ~/Models/models/<org>/<name>
+$S config --shots off                 # keyframes from one candidate a second
 ```
 
 The library lives in `~/Library/Application Support/SwiftSearch`, or wherever
