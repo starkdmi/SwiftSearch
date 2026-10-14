@@ -1,0 +1,57 @@
+FluidUseEmbeddingGemma2
+
+This package is a modified copy of part of FluidUse by FluidInference
+(https://github.com/FluidInference/FluidUse), licensed under the Apache
+License, Version 2.0 (LICENSE in this directory, as upstream ships it).
+
+Copied:
+  Sources/FluidUse/EmbeddingGemma2/EmbeddingGemma2Audio.swift
+  Sources/FluidUse/EmbeddingGemma2/EmbeddingGemma2Manager.swift
+  Sources/FluidUse/EmbeddingGemma2/EmbeddingGemma2ModelStore.swift
+  Sources/FluidUse/EmbeddingGemma2/EmbeddingGemma2Tokenizer.swift
+  Sources/FluidUse/EmbeddingGemma2/EmbeddingGemma2Types.swift
+    at e974b3841aaa438cd4d35dcbc5ba385b4c720643 (main)
+  Sources/FluidUse/EmbeddingGemma2/EmbeddingGemma2Vision.swift
+    at 8d7c014eaacb143e582b0add9dcd37a15f56e323 (FluidInference/FluidUse#32)
+
+Modified by the SwiftSearch authors. Vendor/README.md lists the changes,
+each of which is marked in the files.
+
+EmbeddingGemma2Vision.swift's image resize, `precisionBits` through `cubic`,
+is a port of libImaging/Resample.c from Pillow 12.3.0
+(https://github.com/python-pillow/Pillow), which is licensed as follows.
+
+    The Python Imaging Library (PIL) is
+
+        Copyright © 1997-2011 by Secret Labs AB
+        Copyright © 1995-2011 by Fredrik Lundh and contributors
+
+    Pillow is the friendly PIL fork. It is
+
+        Copyright © 2010 by Jeffrey 'Alex' Clark and contributors
+
+    Like PIL, Pillow is licensed under the open source MIT-CMU License:
+
+    By obtaining, using, and/or copying this software and/or its associated
+    documentation, you agree that you have read, understood, and will comply
+    with the following terms and conditions:
+
+    Permission to use, copy, modify and distribute this software and its
+    documentation for any purpose and without fee is hereby granted,
+    provided that the above copyright notice appears in all copies, and that
+    both that copyright notice and this permission notice appear in supporting
+    documentation, and that the name of Secret Labs AB or the author not be
+    used in advertising or publicity pertaining to distribution of the software
+    without specific, written prior permission.
+
+    SECRET LABS AB AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS
+    SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS.
+    IN NO EVENT SHALL SECRET LABS AB OR THE AUTHOR BE LIABLE FOR ANY SPECIAL,
+    INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+    LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE
+    OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+    PERFORMANCE OF THIS SOFTWARE.
+
+The Core ML models these files load, FluidInference/embeddinggemma-2-coreml,
+are a conversion of google/embeddinggemma-2 (Apache-2.0). Google's model card
+asks deployments to follow the Gemma Prohibited Use Policy.

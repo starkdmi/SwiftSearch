@@ -1,0 +1,426 @@
+{
+  "documents": [
+    {
+      "id": "en-terns",
+      "kind": "originalText",
+      "language": "en",
+      "metadata": {
+        "language": "en",
+        "topic": "terns"
+      },
+      "text": "Arctic terns migrate from the Arctic to the Antarctic and back each year, the longest migration of any animal. A single bird may cover ninety thousand kilometres."
+    },
+    {
+      "id": "en-vents",
+      "kind": "originalText",
+      "language": "en",
+      "metadata": {
+        "language": "en",
+        "topic": "vents"
+      },
+      "text": "Hydrothermal vents on the ocean floor host ecosystems that depend on chemosynthesis rather than sunlight. Tube worms and vent crabs cluster around the plumes."
+    },
+    {
+      "id": "en-press",
+      "kind": "originalText",
+      "language": "en",
+      "metadata": {
+        "language": "en",
+        "topic": "press"
+      },
+      "text": "The printing press, developed by Johannes Gutenberg around 1440, used movable metal type and an oil based ink to reproduce text at a scale manuscripts could not match."
+    },
+    {
+      "id": "en-kelp",
+      "kind": "originalText",
+      "language": "en",
+      "metadata": {
+        "language": "en",
+        "topic": "kelp"
+      },
+      "text": "Kelp forests grow in cold coastal waters and shelter sea otters, rockfish and urchins. A single frond can grow half a metre in a day given enough light."
+    },
+    {
+      "id": "ru-terns",
+      "kind": "originalText",
+      "language": "ru",
+      "metadata": {
+        "language": "ru",
+        "topic": "terns"
+      },
+      "text": "Полярные крачки ежегодно мигрируют из Арктики в Антарктику и обратно. Это самая длинная миграция среди животных: одна птица преодолевает девяносто тысяч километров."
+    },
+    {
+      "id": "ru-vents",
+      "kind": "originalText",
+      "language": "ru",
+      "metadata": {
+        "language": "ru",
+        "topic": "vents"
+      },
+      "text": "Гидротермальные источники на дне океана поддерживают экосистемы, основанные на хемосинтезе, а не на солнечном свете. Вокруг них собираются трубчатые черви и крабы."
+    },
+    {
+      "id": "ru-press",
+      "kind": "originalText",
+      "language": "ru",
+      "metadata": {
+        "language": "ru",
+        "topic": "press"
+      },
+      "text": "Печатный станок Иоганна Гутенберга, созданный около 1440 года, использовал подвижные металлические литеры и масляную краску для печати текста."
+    },
+    {
+      "id": "tr-terns",
+      "kind": "originalText",
+      "language": "tr",
+      "metadata": {
+        "language": "tr",
+        "topic": "terns"
+      },
+      "text": "Kuzey sumruları her yıl Kuzey Kutbu ile Güney Kutbu arasında göç eder. Bu, hayvanlar arasındaki en uzun göçtür ve bir kuş doksan bin kilometre yol alabilir."
+    },
+    {
+      "id": "tr-vents",
+      "kind": "originalText",
+      "language": "tr",
+      "metadata": {
+        "language": "tr",
+        "topic": "vents"
+      },
+      "text": "Okyanus tabanındaki hidrotermal bacalar, güneş ışığı yerine kemosenteze dayanan ekosistemlere ev sahipliği yapar. Işık burada hiç ulaşmaz."
+    },
+    {
+      "id": "tr-press",
+      "kind": "originalText",
+      "language": "tr",
+      "metadata": {
+        "language": "tr",
+        "topic": "press"
+      },
+      "text": "Johannes Gutenberg'in 1440 civarında geliştirdiği matbaa, hareketli metal harfler ve yağlı mürekkep kullanarak metni büyük ölçekte çoğalttı."
+    },
+    {
+      "id": "ar-terns",
+      "kind": "originalText",
+      "language": "ar",
+      "metadata": {
+        "language": "ar",
+        "topic": "terns"
+      },
+      "text": "تهاجر الخرشنة القطبية سنويا من القطب الشمالي إلى القطب الجنوبي والعودة. وهي أطول هجرة بين الحيوانات، إذ يقطع الطائر الواحد تسعين ألف كيلومتر."
+    },
+    {
+      "id": "ar-vents",
+      "kind": "originalText",
+      "language": "ar",
+      "metadata": {
+        "language": "ar",
+        "topic": "vents"
+      },
+      "text": "تحتضن الفوهات الحرارية المائية في قاع المحيط أنظمة بيئية تعتمد على التخليق الكيميائي بدلا من ضوء الشمس. تتجمع الديدان الأنبوبية حول الأعمدة الحارة."
+    },
+    {
+      "id": "ar-press",
+      "kind": "originalText",
+      "language": "ar",
+      "metadata": {
+        "language": "ar",
+        "topic": "press"
+      },
+      "text": "استخدمت مطبعة يوهانس غوتنبرغ حوالي عام 1440 حروفا معدنية متحركة وحبرا زيتيا لإعادة إنتاج النصوص على نطاق واسع."
+    },
+    {
+      "id": "zh-terns",
+      "kind": "originalText",
+      "language": "zh",
+      "metadata": {
+        "language": "zh",
+        "topic": "terns"
+      },
+      "text": "北极燕鸥每年在北极和南极之间往返迁徙，是所有动物中迁徙距离最长的物种，一只鸟可以飞行九万公里。"
+    },
+    {
+      "id": "zh-vents",
+      "kind": "originalText",
+      "language": "zh",
+      "metadata": {
+        "language": "zh",
+        "topic": "vents"
+      },
+      "text": "海底热液喷口孕育了依靠化能合成而非阳光的生态系统，管虫和螃蟹聚集在喷口周围。"
+    },
+    {
+      "id": "zh-press",
+      "kind": "originalText",
+      "language": "zh",
+      "metadata": {
+        "language": "zh",
+        "topic": "press"
+      },
+      "text": "约翰内斯·古腾堡在一四四零年左右发明的印刷机使用活字金属和油性墨水，大规模复制文本。"
+    },
+    {
+      "id": "ja-terns",
+      "kind": "originalText",
+      "language": "ja",
+      "metadata": {
+        "language": "ja",
+        "topic": "terns"
+      },
+      "text": "キョクアジサシは毎年北極と南極の間を往復して渡りを行い、動物の中で最も長い距離を移動します。一羽が九万キロメートルを飛ぶこともあります。"
+    },
+    {
+      "id": "ja-vents",
+      "kind": "originalText",
+      "language": "ja",
+      "metadata": {
+        "language": "ja",
+        "topic": "vents"
+      },
+      "text": "深海の熱水噴出孔には、太陽光ではなく化学合成に依存する生態系が広がっており、チューブワームやカニが集まります。"
+    },
+    {
+      "id": "ja-press",
+      "kind": "originalText",
+      "language": "ja",
+      "metadata": {
+        "language": "ja",
+        "topic": "press"
+      },
+      "text": "ヨハネス・グーテンベルクが一四四〇年頃に開発した活版印刷機は、可動式の金属活字と油性インクを用いて文章を大量に複製しました。"
+    }
+  ],
+  "name": "multilingual-v1",
+  "queries": [
+    {
+      "filterKey": "language",
+      "filterValue": "en",
+      "id": "q-en-terns",
+      "relevance": {
+        "en-terns": 3
+      },
+      "slice": "en",
+      "text": "arctic tern migration distance"
+    },
+    {
+      "filterKey": "language",
+      "filterValue": "en",
+      "id": "q-en-vents",
+      "relevance": {
+        "en-vents": 3
+      },
+      "slice": "en",
+      "text": "hydrothermal vents chemosynthesis"
+    },
+    {
+      "filterKey": "language",
+      "filterValue": "en",
+      "id": "q-en-press",
+      "relevance": {
+        "en-press": 3
+      },
+      "slice": "en",
+      "text": "Gutenberg movable type printing"
+    },
+    {
+      "filterKey": "language",
+      "filterValue": "en",
+      "id": "q-en-kelp",
+      "relevance": {
+        "en-kelp": 3
+      },
+      "slice": "en",
+      "text": "kelp forest sea otters"
+    },
+    {
+      "filterKey": "language",
+      "filterValue": "ru",
+      "id": "q-ru-terns",
+      "relevance": {
+        "ru-terns": 3
+      },
+      "slice": "ru",
+      "text": "миграции полярных крачек"
+    },
+    {
+      "filterKey": "language",
+      "filterValue": "ru",
+      "id": "q-ru-vents",
+      "relevance": {
+        "ru-vents": 3
+      },
+      "slice": "ru",
+      "text": "гидротермальные источники хемосинтез"
+    },
+    {
+      "filterKey": "language",
+      "filterValue": "ru",
+      "id": "q-ru-press",
+      "relevance": {
+        "ru-press": 3
+      },
+      "slice": "ru",
+      "text": "печатный станок Гутенберга"
+    },
+    {
+      "filterKey": "language",
+      "filterValue": "tr",
+      "id": "q-tr-terns",
+      "relevance": {
+        "tr-terns": 3
+      },
+      "slice": "tr",
+      "text": "kuzey sumrularının göçü"
+    },
+    {
+      "filterKey": "language",
+      "filterValue": "tr",
+      "id": "q-tr-vents",
+      "relevance": {
+        "tr-vents": 3
+      },
+      "slice": "tr",
+      "text": "hidrotermal bacalar kemosentez"
+    },
+    {
+      "filterKey": "language",
+      "filterValue": "tr",
+      "id": "q-tr-press",
+      "relevance": {
+        "tr-press": 3
+      },
+      "slice": "tr",
+      "text": "GUTENBERG MATBAA HAREKETLİ HARF"
+    },
+    {
+      "filterKey": "language",
+      "filterValue": "ar",
+      "id": "q-ar-terns",
+      "relevance": {
+        "ar-terns": 3
+      },
+      "slice": "ar",
+      "text": "هِجرة الخرشنة القطبية"
+    },
+    {
+      "filterKey": "language",
+      "filterValue": "ar",
+      "id": "q-ar-vents",
+      "relevance": {
+        "ar-vents": 3
+      },
+      "slice": "ar",
+      "text": "الفوهات الحرارية المائية"
+    },
+    {
+      "filterKey": "language",
+      "filterValue": "ar",
+      "id": "q-ar-press",
+      "relevance": {
+        "ar-press": 3
+      },
+      "slice": "ar",
+      "text": "مطبعة غوتنبرغ الحروف المعدنية"
+    },
+    {
+      "filterKey": "language",
+      "filterValue": "zh",
+      "id": "q-zh-terns",
+      "relevance": {
+        "zh-terns": 3
+      },
+      "slice": "zh",
+      "text": "北极燕鸥迁徙"
+    },
+    {
+      "filterKey": "language",
+      "filterValue": "zh",
+      "id": "q-zh-vents",
+      "relevance": {
+        "zh-vents": 3
+      },
+      "slice": "zh",
+      "text": "海底热液喷口"
+    },
+    {
+      "filterKey": "language",
+      "filterValue": "zh",
+      "id": "q-zh-single",
+      "relevance": {
+        "zh-terns": 3
+      },
+      "slice": "zh-single-char",
+      "text": "鸥"
+    },
+    {
+      "filterKey": "language",
+      "filterValue": "ja",
+      "id": "q-ja-terns",
+      "relevance": {
+        "ja-terns": 3
+      },
+      "slice": "ja",
+      "text": "キョクアジサシ 渡り"
+    },
+    {
+      "filterKey": "language",
+      "filterValue": "ja",
+      "id": "q-ja-vents",
+      "relevance": {
+        "ja-vents": 3
+      },
+      "slice": "ja",
+      "text": "熱水噴出孔 化学合成"
+    },
+    {
+      "filterKey": "language",
+      "filterValue": "ja",
+      "id": "q-ja-press",
+      "relevance": {
+        "ja-press": 3
+      },
+      "slice": "ja",
+      "text": "グーテンベルク 活版印刷"
+    },
+    {
+      "id": "q-x-terns",
+      "relevance": {
+        "ar-terns": 3,
+        "en-terns": 3,
+        "ja-terns": 3,
+        "ru-terns": 3,
+        "tr-terns": 3,
+        "zh-terns": 3
+      },
+      "slice": "cross-language",
+      "text": "arctic tern migration"
+    },
+    {
+      "id": "q-x-vents",
+      "relevance": {
+        "ar-vents": 3,
+        "en-vents": 3,
+        "ja-vents": 3,
+        "ru-vents": 3,
+        "tr-vents": 3,
+        "zh-vents": 3
+      },
+      "slice": "cross-language",
+      "text": "deep sea hydrothermal vents"
+    },
+    {
+      "id": "q-x-press",
+      "relevance": {
+        "ar-press": 3,
+        "en-press": 3,
+        "ja-press": 3,
+        "ru-press": 3,
+        "tr-press": 3,
+        "zh-press": 3
+      },
+      "slice": "cross-language",
+      "text": "invention of the printing press"
+    }
+  ]
+}
