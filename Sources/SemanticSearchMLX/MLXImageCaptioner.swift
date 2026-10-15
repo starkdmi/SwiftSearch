@@ -9,7 +9,8 @@ import SemanticSearch
 /// Captions images with an MLX vision-language model.
 ///
 /// The default is SmolVLM2-500M with a short caption prompt, greedy decoding
-/// and a tile-aware resize. Any VLM the MLX runtime
+/// and a tile-aware resize. ``lfm25VL450M`` is the faster, lighter
+/// alternative, under a licence with a revenue limit. Any VLM the MLX runtime
 /// loads can be swapped in through ``Configuration/model`` and
 /// ``Configuration/prompt``; both are part of the fingerprint, so changing
 /// either re-captions on the next ingest.
@@ -17,27 +18,53 @@ public actor MLXImageCaptioner: ImageCaptioner {
 
     public struct Configuration: Sendable, Hashable {
         public var model: ModelReference
-        public var prompt: String
+        /// The model's own (``defaultPrompt(for:)``) until one is set, so
+        /// changing ``model`` changes it too.
+        public var prompt: String {
+            get { chosenPrompt ?? Self.defaultPrompt(for: model) }
+            set { chosenPrompt = newValue }
+        }
+        private var chosenPrompt: String?
         public var maximumTokens: Int
         /// Longest side the image is reduced to before the model sees it.
         /// SmolVLM's processor then scales it onto its full tiling canvas
         /// (2048 pixels, 512-pixel tiles) however small it is, so this sets
-        /// how much detail the tiles hold, not how many there are.
+        /// how much detail the tiles hold, not how many there are. LFM2-VL's
+        /// resizes what it gets to 64–256 tokens, or cuts an image over
+        /// 2 × 512² pixels (~724²) into 512-pixel tiles and a thumbnail.
         public var maximumDimension: Int
-        /// Language the model writes in. SmolVLM2 answers in English.
+        /// Language the model writes in. SmolVLM2 and LFM2.5-VL answer in
+        /// English.
         public var language: String?
         public var runtime: MLXRuntime.Configuration
 
+        /// One sentence for LFM2-VL checkpoints, SmolVLM2's caption prompt
+        /// for every other model. Asked SmolVLM2's prompt, LFM2.5-VL answers
+        /// in a few generic words; its own "Describe this image." writes a
+        /// paragraph, several times the tokens and the time. Any other model
+        /// keeps the prompt it had before there was a choice, and with it the
+        /// fingerprint its captions were indexed under. Known by name: an
+        /// LFM2-VL conversion in a directory not named for it needs `prompt`.
+        public static func defaultPrompt(for model: ModelReference) -> String {
+            isLFM2VL(model)
+                ? "Describe this image in one sentence." : "Provide a caption for an image."
+        }
+
+        static func isLFM2VL(_ model: ModelReference) -> Bool {
+            model.identity.lowercased().contains("lfm2")
+        }
+
+        /// `prompt` defaults to the model's own (``defaultPrompt(for:)``).
         public init(
             model: ModelReference = MLXImageCaptioner.defaultModel,
-            prompt: String = "Provide a caption for an image.",
+            prompt: String? = nil,
             maximumTokens: Int = 128,
             maximumDimension: Int = 1_024,
             language: String? = "en",
             runtime: MLXRuntime.Configuration = .fromEnvironment()
         ) {
             self.model = model
-            self.prompt = prompt
+            self.chosenPrompt = prompt
             self.maximumTokens = max(1, maximumTokens)
             self.maximumDimension = max(64, maximumDimension)
             self.language = language
@@ -46,9 +73,31 @@ public actor MLXImageCaptioner: ImageCaptioner {
     }
 
     /// SmolVLM2-500M, 8-bit: ~0.75 s to load, ~1.4 s and ~14 tokens per
-    /// caption on an M1 Pro.
-    public static let defaultModel: ModelReference =
+    /// caption on an M1 Pro. Apache-2.0.
+    public static let smolVLM2: ModelReference =
         "starkdmi/SmolVLM2-500M-Video-Instruct-mlx-8bit@2e8ce1273bb560451061cf3e33e0361b6132521c"
+
+    /// LiquidAI's 8-bit MLX conversion of LFM2.5-VL-450M, 536 MB. A picture
+    /// LFM2-VL takes as one crop is captioned in about a fifth of SmolVLM2's
+    /// time with half the memory: the first caption after loading in
+    /// 0.3–0.4 s against 2.2–2.5 s, 1.1 GB against 2.2 GB at peak, for
+    /// `CaptionIntegrationTests`' 640×640 picture on an M1 Pro (Debug).
+    /// Larger ones are cut into tiles: a letter-size page went in as six
+    /// tiles and a thumbnail, took 1.2–1.4 s against SmolVLM2's 2.1–2.3 s,
+    /// and peaked at 2.5 GB — reading more of the page (a recipe's source
+    /// and year, which SmolVLM2 left out). The tile-aware resize keeps a 16:9
+    /// keyframe in one crop: at 896×504 it is under the size LFM2-VL tiles
+    /// at, where at 1024×576 it went in as two tiles and a thumbnail, three
+    /// times the image tokens for much the same caption.
+    ///
+    /// Its licence, the LFM Open License v1.0, allows commercial use only
+    /// to a company under US$10 million in annual revenue; read it before
+    /// shipping this model.
+    public static let lfm25VL450M: ModelReference =
+        "LiquidAI/LFM2.5-VL-450M-MLX-8bit@0ba813614426da55e118ee06cf5876519deb8095"
+
+    /// ``smolVLM2``, whose licence puts no limit on who ships it.
+    public static let defaultModel: ModelReference = smolVLM2
 
     public let configuration: Configuration
     private var container: ModelContainer?

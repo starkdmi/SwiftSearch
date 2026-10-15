@@ -32,7 +32,8 @@ enum Integration {
         flag("SEMANTIC_SEARCH_RUN_ASR_TESTS")
     }
 
-    /// Gate for tests that run the SmolVLM2 captioner (~500 MB).
+    /// Gate for tests that run the captioner: SmolVLM2-500M (~500 MB), or the
+    /// model `SEMANTIC_SEARCH_CAPTION_MODEL` names.
     static var runsCaptionTests: Bool {
         flag("SEMANTIC_SEARCH_RUN_CAPTION_TESTS")
     }
@@ -76,6 +77,14 @@ enum Integration {
 
     static var captionModel: ModelReference {
         reference("SEMANTIC_SEARCH_CAPTION_MODEL") ?? ModelProfile.Captioning.model
+    }
+
+    /// `SEMANTIC_SEARCH_CAPTION_PROMPT`: the captioner's prompt, in place of
+    /// the model's default (``MLXImageCaptioner/Configuration/defaultPrompt(for:)``).
+    static var captionPrompt: String? {
+        ProcessInfo.processInfo.environment["SEMANTIC_SEARCH_CAPTION_PROMPT"].flatMap {
+            $0.isEmpty ? nil : $0
+        }
     }
 
     static var embeddingGemmaModel: ModelReference {

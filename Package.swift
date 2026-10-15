@@ -41,7 +41,7 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/ml-explore/mlx-swift", .upToNextMinor(from: "0.32.3")),
-        .package(url: "https://github.com/starkdmi/mlx-swift-lm", exact: "3.32.3-swiftsearch.1"),
+        .package(url: "https://github.com/starkdmi/mlx-swift-lm", exact: "3.32.3-swiftsearch.3"),
         // The runtime takes its downloader and tokenizer from the caller.
         // These are the `HubApi` and tokenizers it used before 3.0, so
         // downloads keep their layout (HubIntegration.swift).

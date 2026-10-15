@@ -1,7 +1,7 @@
 import Foundation
 
 /// Describes an image in words. Implement this to use a different captioning
-/// model; the bundled one is SmolVLM2 (`MLXImageCaptioner`).
+/// model; the bundled one is SmolVLM2 or LFM2.5-VL (`MLXImageCaptioner`).
 ///
 /// A caption is what lets a frame be found by a text-only profile: the 0.6B
 /// text embedder and reranker cannot read pixels, but they read "a dog

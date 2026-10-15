@@ -141,6 +141,8 @@ public enum ModelProfile {
 
     /// Frames in words, for the text profile: SmolVLM2-500M captions each
     /// frame, and the caption is indexed and reranked like any other text.
+    /// `captioner(model: MLXImageCaptioner.lfm25VL450M)` captions with
+    /// LFM2.5-VL-450M instead (see ``MLXImageCaptioner/lfm25VL450M``).
     ///
     /// Pictures searched with the 0.6B text pair plus a 500M captioner, no 2B
     /// model resident at query time. Wrap the frame source with
@@ -163,12 +165,16 @@ public enum ModelProfile {
     public enum Captioning {
         public static let model: ModelReference = MLXImageCaptioner.defaultModel
 
+        /// `prompt` defaults to the model's own
+        /// (``MLXImageCaptioner/Configuration/defaultPrompt(for:)``).
         public static func captioner(
             model: ModelReference = model,
+            prompt: String? = nil,
             runtime: MLXRuntime.Configuration = .fromEnvironment()
         ) -> MLXImageCaptioner {
             MLXImageCaptioner(
-                configuration: MLXImageCaptioner.Configuration(model: model, runtime: runtime))
+                configuration: MLXImageCaptioner.Configuration(
+                    model: model, prompt: prompt, runtime: runtime))
         }
     }
 

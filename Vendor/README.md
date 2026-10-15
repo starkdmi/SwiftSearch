@@ -57,7 +57,7 @@ Changes, each marked in the files:
 
 Not vendored: the package depends on
 [starkdmi/mlx-swift-lm](https://github.com/starkdmi/mlx-swift-lm) at
-`3.32.3-swiftsearch.1`, which is upstream 3.32.3 plus four commits:
+`3.32.3-swiftsearch.3`, which is upstream 3.32.3 plus six commits:
 
 1. Qwen3-VL's hidden states in `LMOutput`, which the multimodal embedder pools.
 2. Qwen-VL's image placeholders encoded without special tokens.
@@ -69,6 +69,18 @@ Not vendored: the package depends on
 4. `EmbeddingGemma2.sanitize` non-throwing. A throwing method cannot witness
    3.32.3's non-throwing requirement, and Swift silently takes the protocol's
    no-op default, loading the checkpoint in PyTorch's layout.
+5. LFM2-VL as transformers runs it. LFM2.5-VL-450M did not load: its
+   checkpoint carries a projector norm its config turns off. Every image was
+   stretched onto whole 512-pixel tiles and encoded as one crop, a 16:9
+   frame as 4,096 patches where the encoder saw at most 1,024; now it is
+   resized to 64–256 tokens or cut into tiles and a thumbnail, each crop
+   encoded at its own length, with the processor's antialiased bilinear
+   resize, and the position embeddings are resized as Siglip2's are.
+   Against mlx-vlm 0.7.8 the prompt tokens are identical, the pixels within
+   1/255 and the first logits at cosine 0.99999.
+6. That resize's weights built from the filter's reach alone: visiting every
+   input for every output cost ~260 ms of a caption in a Debug build, for
+   the same weights.
 
 An app that also depends on upstream mlx-swift-lm cannot resolve both: they
 share a package identity. The fork goes when an upstream release carries what

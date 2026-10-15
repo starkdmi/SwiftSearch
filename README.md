@@ -24,7 +24,7 @@ server that keeps an index of your folders for you or for an AI agent.
 | Product | Depends on | For |
 |---|---|---|
 | `SemanticSearch` | SQLite, USearch | Storage, BM25, fusion, the engine; chunking on paragraphs and sentences, Markdown at its headings. No models. |
-| `SemanticSearchMLX` | MLX | Qwen3 and Qwen3-VL embedding and reranking, EmbeddingGemma 2, SmolVLM2 captions. |
+| `SemanticSearchMLX` | MLX | Qwen3 and Qwen3-VL embedding and reranking, EmbeddingGemma 2, SmolVLM2 or LFM2.5-VL captions. |
 | `SemanticSearchApple` | Vision, PDFKit, AVFoundation, Speech, SoundAnalysis, ImageIO, MapKit | OCR (document structure on macOS/iOS 26), PDFs, video keyframes, SpeechAnalyzer transcription (macOS/iOS 26), sound events, file metadata and place names. |
 | `SemanticSearchFluidAudio` | FluidAudio | Parakeet transcription. |
 | `SemanticSearchShots` | Core ML | Shots and transitions for keyframes, with OmniShotCut (downloaded). |
@@ -176,6 +176,13 @@ picture at ingest: pictures are found through their captions and no 2B model
 is resident, but it cannot search *by* image. The multimodal profile embeds
 pixels and text in one space, and a query can be a picture.
 
+`ModelProfile.Captioning.captioner(model: MLXImageCaptioner.lfm25VL450M)`
+captions with LFM2.5-VL-450M instead: a picture it takes whole, a video
+frame among them, in about a fifth of SmolVLM2's time with half the memory;
+a page or photo large enough to be cut into tiles in about 60% of the time,
+with more memory, read more closely. It is not the default because of its
+licence (below).
+
 Both Qwen pairs default to 5-bit MLX conversions. Every default model is
 pinned to a Hub commit, and an index records it: a reference is
 `ModelReference("<org>/<name>@<revision>")`, and a new revision opens a new
@@ -290,7 +297,7 @@ build. Every model-backed test is gated on an environment variable, so
 | `SEMANTIC_SEARCH_RUN_INTEGRATION_TESTS` | Qwen3-Embedding-0.6B + Qwen3-Reranker-0.6B (~1 GB) |
 | `SEMANTIC_SEARCH_RUN_MULTIMODAL_TESTS` | Qwen3-VL-Embedding-2B + Qwen3-VL-Reranker-2B (~4 GB) |
 | `SEMANTIC_SEARCH_RUN_ASR_TESTS` | Parakeet TDT v3 (~600 MB) |
-| `SEMANTIC_SEARCH_RUN_CAPTION_TESTS` | SmolVLM2-500M (~500 MB) |
+| `SEMANTIC_SEARCH_RUN_CAPTION_TESTS` | SmolVLM2-500M (~500 MB), or the model `_CAPTION_MODEL` names |
 | `SEMANTIC_SEARCH_RUN_GEOCODING_TESTS` | MapKit reverse geocoding (macOS 26; network) |
 | `SEMANTIC_SEARCH_RUN_EMBEDDINGGEMMA_TESTS` | EmbeddingGemma 2 on MLX (1.49 GB) |
 | `SEMANTIC_SEARCH_RUN_COREML_EMBEDDINGGEMMA_TESTS` | EmbeddingGemma 2 on Core ML (macOS 15; ~1.5 GB) |
@@ -300,7 +307,8 @@ build. Every model-backed test is gated on an environment variable, so
 `_VL_EMBEDDING_MODEL`, `_VL_RERANKER_MODEL`, `_CAPTION_MODEL` and
 `_EMBEDDINGGEMMA_MODEL` point the tests at another Hub id (`@revision` to pin
 it) or a local conversion; `SEMANTIC_SEARCH_COREML_EMBEDDINGGEMMA_DIRECTORY` at a complete
-local copy of the Core ML conversion.
+local copy of the Core ML conversion. `SEMANTIC_SEARCH_CAPTION_PROMPT` replaces
+the captioner's prompt.
 
 Vendored code and the mlx-swift-lm fork are described in
 [Vendor/README.md](Vendor/README.md).
@@ -318,6 +326,7 @@ terms:
 |---|---|
 | Qwen3-Embedding, Qwen3-Reranker, Qwen3-VL-Embedding, Qwen3-VL-Reranker | Apache-2.0 |
 | SmolVLM2-500M-Video-Instruct | Apache-2.0 |
+| LFM2.5-VL-450M (opt-in) | [LFM Open License v1.0](https://huggingface.co/LiquidAI/LFM2.5-VL-450M-MLX-8bit/blob/main/LICENSE): commercial use only by companies under US$10 million in annual revenue |
 | EmbeddingGemma 2 | Apache-2.0, with Google's Gemma Prohibited Use Policy |
 | Parakeet TDT 0.6B v3 | CC-BY-4.0 |
 | OmniShotCut v1.5 | MIT |
