@@ -104,8 +104,15 @@ enum Recipe {
         // The engine opens the pictures it shows the reranker itself: only
         // those `read_file` would open.
         configuration.mediaAccess = { boundary.allows($0) }
-        // One model resident at a time: the agent beside it needs memory too.
-        configuration.runtime = RuntimePolicy(sequentialModelResidency: true)
+        // One model resident at a time only where two do not fit beside the
+        // agent: the multimodal 2B pair is ~4 GB. The fast 0.6B pair is
+        // ~0.8 GB, and swapping it loaded both models again for every query.
+        // Either way they are released after five idle minutes: the MCP server
+        // lives as long as the agent beside it, and holds nothing between its
+        // bursts of searches.
+        configuration.runtime = RuntimePolicy(
+            modelIdleTimeout: idleTimeout,
+            sequentialModelResidency: settings.profile == .multimodal)
         return Built(
             configuration: configuration, releaseProcessorModels: release,
             namePendingPlaces: { engine in try await metadata.namePendingPlaces(in: engine) })
@@ -113,6 +120,9 @@ enum Recipe {
 
     /// Keyframes from OmniShotCut's shots, or a candidate a second when shots
     /// are off.
+    /// How long the engine keeps its models with nothing to do.
+    static let idleTimeout: Duration = .seconds(300)
+
     static func keyframes(_ segmenter: OmniShotCutSegmenter?) async -> KeyframeProcessor {
         guard let segmenter else { return KeyframeProcessor() }
         return await KeyframeProcessor(segmenter: segmenter)

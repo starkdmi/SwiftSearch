@@ -372,6 +372,20 @@ struct LibraryTests {
         #expect(!access(secret))
     }
 
+    @Test("Only the multimodal profile swaps its models; idle ones are released")
+    func residencyPerProfile() async throws {
+        let fixture = try Fixture()
+        let folder = Library.resolved(fixture.folder.path)
+        for (profile, sequential) in [(Profile.fast, false), (.multimodal, true)] {
+            let built = await Recipe.build(
+                settings: Settings(folders: [folder], profile: profile),
+                storeURL: fixture.root.appendingPathComponent("\(profile).sqlite"),
+                boundary: FolderBoundary([folder]))
+            #expect(built.configuration.runtime.sequentialModelResidency == sequential)
+            #expect(built.configuration.runtime.modelIdleTimeout == .seconds(300))
+        }
+    }
+
     @Test("A library's home is private to its owner")
     func privateHome() async throws {
         let fixture = try Fixture()
