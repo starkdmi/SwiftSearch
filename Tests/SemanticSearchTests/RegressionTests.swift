@@ -392,6 +392,27 @@ struct QueryRegressionTests {
         #expect(results.diagnostics.partiallyAnsweredSpaces.map(\.space) == ["test"])
         #expect(results.diagnostics.channels.contains { $0.channel.space == "test" })
     }
+
+    @Test("A query is embedded once per instruction, not once per family")
+    func queryEmbeddedOncePerInstruction() async throws {
+        let provider = QueryLedgerEmbeddingProvider()
+        let engine = try await SemanticSearchEngine(
+            configuration: EngineConfiguration(
+                spaces: [EmbeddingSpaceConfiguration(id: "s", provider: provider)]))
+        try await engine.upsert([textItem("a", "alpha beta"), textItem("b", "gamma")])
+
+        let plain = try await engine.search("alpha", options: SearchOptions(mode: .denseOnly))
+        #expect(plain.diagnostics.channels.count > 1)
+        #expect(plain.hits.first?.itemID == "a")
+        #expect(await provider.queries == [nil])
+
+        _ = try await engine.search(
+            "alpha",
+            options: SearchOptions(mode: .denseOnly, queryInstructions: [.caption: "a picture"]))
+        let second = await provider.queries.dropFirst()
+        #expect(Set(second) == [nil, "a picture"])
+        #expect(second.count == 2)
+    }
 }
 
 @Suite("Regressions: filters")
@@ -624,6 +645,38 @@ actor LedgerEmbeddingProvider: EmbeddingProvider {
 
     func embed(_ inputs: [EmbeddingInput]) async throws -> [EmbeddingOutput] {
         guard prepared else { throw SemanticSearchError.providerNotPrepared("ledger-embedder") }
+        return try await inner.embed(inputs)
+    }
+}
+
+/// Records the instruction of every query it embeds.
+actor QueryLedgerEmbeddingProvider: EmbeddingProvider {
+    private let inner = HashingEmbeddingProvider()
+    private var prepared = false
+    private(set) var queries: [String?] = []
+
+    var descriptor: EmbeddingSpaceDescriptor {
+        EmbeddingSpaceDescriptor(
+            modelIdentity: "query-ledger", tokenizerVersion: "t", preprocessingVersion: "p",
+            pooling: "sum", normalized: true, dimensions: 64)
+    }
+    var capabilities: EmbeddingCapabilities {
+        EmbeddingCapabilities(acceptsText: true, maximumBatchSize: 8, maximumInputTokens: 512)
+    }
+    var isPrepared: Bool { prepared }
+
+    func prepare() async throws {
+        try await inner.prepare()
+        prepared = true
+    }
+
+    func release() async { prepared = false }
+
+    func embed(_ inputs: [EmbeddingInput]) async throws -> [EmbeddingOutput] {
+        guard prepared else { throw SemanticSearchError.providerNotPrepared("query-ledger") }
+        for input in inputs {
+            if case .query(let instruction) = input.role { queries.append(instruction) }
+        }
         return try await inner.embed(inputs)
     }
 }

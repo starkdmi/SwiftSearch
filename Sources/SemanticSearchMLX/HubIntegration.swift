@@ -189,7 +189,56 @@ struct HubDownloader: MLXLMCommon.Downloader {
 /// the tokenizer mlx-swift-lm 2.x built.
 struct TransformersTokenizerLoader: MLXLMCommon.TokenizerLoader {
     func load(from directory: URL) async throws -> any MLXLMCommon.Tokenizer {
-        TransformersTokenizer(try await AutoTokenizer.from(modelFolder: directory))
+        try await TokenizerCache.shared.tokenizer(in: directory)
+    }
+}
+
+/// Tokenizers by model directory, kept when a provider releases its weights.
+/// Under sequential residency every query loads its models again, and each
+/// load parsed `tokenizer.json` again — Qwen3's 151k tokens and merges. One
+/// instance can serve every load: swift-transformers never changes a built
+/// tokenizer but for its chat-template cache, which it locks. The key carries
+/// the size and date of the directory's files, so a local conversion
+/// rewritten in place is read again.
+actor TokenizerCache {
+    static let shared = TokenizerCache()
+
+    private struct Key: Hashable {
+        let directory: String
+        let files: [String]
+    }
+
+    private var loads: [Key: Task<TransformersTokenizer, any Error>] = [:]
+
+    func tokenizer(in directory: URL) async throws -> TransformersTokenizer {
+        let key = Key(directory: directory.standardizedFileURL.path, files: Self.stamps(directory))
+        if let load = loads[key] { return try await load.value }
+        // The directory's older tokenizer is replaced, not kept beside it.
+        loads = loads.filter { $0.key.directory != key.directory }
+        let load = Task {
+            TransformersTokenizer(try await AutoTokenizer.from(modelFolder: directory))
+        }
+        loads[key] = load
+        do {
+            return try await load.value
+        } catch {
+            if loads[key] == load { loads[key] = nil }
+            throw error
+        }
+    }
+
+    /// Name, size and date of each file directly in `directory`.
+    private static func stamps(_ directory: URL) -> [String] {
+        let keys: [URLResourceKey] = [.fileSizeKey, .contentModificationDateKey]
+        let files =
+            (try? FileManager.default.contentsOfDirectory(
+                at: directory, includingPropertiesForKeys: keys, options: .skipsHiddenFiles))
+            ?? []
+        return files.map { file in
+            let values = try? file.resolvingSymlinksInPath().resourceValues(forKeys: Set(keys))
+            let date = values?.contentModificationDate?.timeIntervalSinceReferenceDate ?? 0
+            return "\(file.lastPathComponent):\(values?.fileSize ?? -1):\(date)"
+        }.sorted()
     }
 }
 

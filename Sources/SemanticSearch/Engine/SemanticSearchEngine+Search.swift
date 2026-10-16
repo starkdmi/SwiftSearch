@@ -401,6 +401,11 @@ extension SemanticSearchEngine {
                                 + "only the text of the query was embedded"))
                 }
 
+                // Families of one space and variant differ only in their
+                // instruction. Without one of their own they ask the same
+                // question, and embedding it for each family ran the text
+                // profile's model six times a query for one vector.
+                var outputs: [String?: EmbeddingOutput] = [:]
                 for family in families.sorted(by: { $0.rawValue < $1.rawValue }) {
                     try Task.checkCancellation()
                     let channel = RetrievalChannelID(
@@ -412,18 +417,24 @@ extension SemanticSearchEngine {
                         ?? runtime.configuration.queryInstructions[family]
                         ?? configuration.queryInstructions[family]
 
-                    let input = EmbeddingInput(
-                        text: variant.query.text,
-                        images: queryImages,
-                        role: .query(instruction: instruction),
-                        requestedDimensions: options.reducedDimensions
-                            ?? runtime.stored.reducedDimensions)
+                    let output: EmbeddingOutput
+                    if let embedded = outputs[instruction] {
+                        output = embedded
+                    } else {
+                        let input = EmbeddingInput(
+                            text: variant.query.text,
+                            images: queryImages,
+                            role: .query(instruction: instruction),
+                            requestedDimensions: options.reducedDimensions
+                                ?? runtime.stored.reducedDimensions)
 
-                    // Load and embed under one permit: between two, another
-                    // job's residency switch could release the model again.
-                    let output = try await withInference(priority: .interactive) {
-                        try await self.makeResident(embedder: provider)
-                        return try await provider.embed(input)
+                        // Load and embed under one permit: between two, another
+                        // job's residency switch could release the model again.
+                        output = try await withInference(priority: .interactive) {
+                            try await self.makeResident(embedder: provider)
+                            return try await provider.embed(input)
+                        }
+                        outputs[instruction] = output
                     }
                     guard !output.vector.isEmpty else {
                         diagnostics.skippedSpaces.append(
