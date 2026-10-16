@@ -67,7 +67,7 @@ extension MCPServer {
 
     static func makeServer(library: Library, activity: Activity) async -> Server {
         let server = Server(
-            name: "swiftsearch", version: "0.1.0",
+            name: "swiftsearch", version: "0.1.1",
             capabilities: .init(tools: .init(listChanged: false)))
         await server.withMethodHandler(ListTools.self) { _ in .init(tools: Tools.all) }
         await server.withMethodHandler(CallTool.self) { parameters in

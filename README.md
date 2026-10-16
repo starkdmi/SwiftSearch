@@ -18,7 +18,7 @@ server that keeps an index of your folders for you or for an AI agent.
 ## Installation
 
 ```swift
-.package(url: "https://github.com/starkdmi/SwiftSearch", from: "0.1.0")
+.package(url: "https://github.com/starkdmi/SwiftSearch", from: "0.1.1")
 ```
 
 | Product | Depends on | For |
