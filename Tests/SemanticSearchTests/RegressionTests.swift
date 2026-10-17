@@ -356,13 +356,19 @@ struct ResidencyRegressionTests {
                 spaces: [EmbeddingSpaceConfiguration(id: "s", provider: provider)]))
         try await engine.upsert([textItem("a", "alpha beta")])
 
-        // The first search holds the only permit until the gate opens. With a
-        // sleep instead, the order was the scheduler's, and the test failed
-        // when the suite ran under load.
+        // The first search holds the only permit until the gate opens, and the
+        // hold is timed from the second search's start. Timed from creating
+        // either task, the order and the wait were the scheduler's, and the
+        // test failed when the suite ran under load.
         let options = SearchOptions(mode: .denseOnly)
         let first = Task { try await engine.search("alpha", options: options) }
         await provider.waitUntilHolding()
-        let second = Task { try await engine.search("beta", options: options) }
+        let (started, starting) = AsyncStream<Void>.makeStream()
+        let second = Task {
+            starting.finish()
+            return try await engine.search("beta", options: options)
+        }
+        for await _ in started {}
         try await Task.sleep(for: .milliseconds(300))
         await provider.open()
         _ = try await first.value
