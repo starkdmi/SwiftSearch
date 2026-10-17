@@ -202,6 +202,20 @@ struct LibraryTests {
         try await library.close()
     }
 
+    @Test("A search says where its time went; the JSON an agent reads does not")
+    func searchTimings() async throws {
+        let fixture = try Fixture()
+        let library = try await Self.synced(fixture)
+        let answer = try await library.search("otters sleep")
+        let timings = try #require(answer.timings)
+        #expect(timings.rounds == 1)
+        #expect(timings.total >= timings.retrieval + timings.rerank)
+
+        let json = try JSONSerialization.jsonObject(with: JSONEncoder().encode(answer))
+        #expect((json as? [String: Any])?.keys.sorted() == ["files", "notes", "query"])
+        try await library.close()
+    }
+
     @Test("Search inside one file")
     func searchWithin() async throws {
         let fixture = try Fixture()

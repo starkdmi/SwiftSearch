@@ -332,6 +332,39 @@ struct ResidencyRegressionTests {
         #expect(await ledger.loads == 2)
     }
 
+    @Test("A search reports the time it spent loading a released model")
+    func searchReportsModelLoad() async throws {
+        let provider = SlowLoadingEmbeddingProvider(load: .milliseconds(100))
+        let engine = try await SemanticSearchEngine(
+            configuration: EngineConfiguration(
+                spaces: [EmbeddingSpaceConfiguration(id: "s", provider: provider)]))
+        try await engine.upsert([textItem("a", "alpha beta")])
+        await engine.releaseModels()
+
+        let options = SearchOptions(mode: .denseOnly)
+        let cold = try await engine.search("alpha", options: options)
+        #expect(cold.diagnostics.modelLoadDuration >= .milliseconds(100))
+        let warm = try await engine.search("alpha", options: options)
+        #expect(warm.diagnostics.modelLoadDuration < .milliseconds(100))
+    }
+
+    @Test("A search reports the time it waited behind another for the permit")
+    func searchReportsPermitWait() async throws {
+        let provider = SlowEmbeddingProvider()
+        let engine = try await SemanticSearchEngine(
+            configuration: EngineConfiguration(
+                spaces: [EmbeddingSpaceConfiguration(id: "s", provider: provider)]))
+        try await engine.upsert([textItem("a", "alpha beta")])
+
+        let options = SearchOptions(mode: .denseOnly)
+        let first = Task { try await engine.search("alpha", options: options) }
+        try await Task.sleep(for: .milliseconds(50))
+        // The first search holds the only permit for its 300 ms embedding.
+        let second = try await engine.search("beta", options: options)
+        _ = try await first.value
+        #expect(second.diagnostics.inferenceWaitDuration >= .milliseconds(150))
+    }
+
     @Test("Idle models are released after the configured timeout")
     func idleTimeoutReleasesModels() async throws {
         let embedder = HashingEmbeddingProvider()
@@ -704,6 +737,40 @@ actor VoidEmbeddingProvider: EmbeddingProvider {
             empty.vector = []
             return empty
         }
+    }
+}
+
+/// Takes `load` to prepare, like a model read from disk.
+actor SlowLoadingEmbeddingProvider: EmbeddingProvider {
+    private let inner = HashingEmbeddingProvider()
+    private let load: Duration
+    private var prepared = false
+
+    init(load: Duration) { self.load = load }
+
+    var descriptor: EmbeddingSpaceDescriptor {
+        EmbeddingSpaceDescriptor(
+            modelIdentity: "slow-loading-embedder", tokenizerVersion: "t",
+            preprocessingVersion: "p", pooling: "sum", normalized: true, dimensions: 64)
+    }
+    var capabilities: EmbeddingCapabilities {
+        EmbeddingCapabilities(acceptsText: true, maximumBatchSize: 8, maximumInputTokens: 512)
+    }
+    var isPrepared: Bool { prepared }
+
+    func prepare() async throws {
+        try await Task.sleep(for: load)
+        try await inner.prepare()
+        prepared = true
+    }
+
+    func release() async { prepared = false }
+
+    func embed(_ inputs: [EmbeddingInput]) async throws -> [EmbeddingOutput] {
+        guard prepared else {
+            throw SemanticSearchError.providerNotPrepared("slow-loading-embedder")
+        }
+        return try await inner.embed(inputs)
     }
 }
 

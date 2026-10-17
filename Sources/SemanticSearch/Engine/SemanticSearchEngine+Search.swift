@@ -203,6 +203,25 @@ extension SemanticSearchEngine {
             diagnostics: diagnostics)
     }
 
+    /// `run` under an interactive inference permit, after `load` makes its
+    /// model resident, with the wait for the permit and the load added to
+    /// `diagnostics`.
+    private func withResidentModel<T: Sendable>(
+        diagnostics: inout SearchDiagnostics, load: () async throws -> Void,
+        run: () async throws -> T
+    ) async throws -> T {
+        let requested = ContinuousClock.now
+        let (value, wait, loading) = try await withInference(priority: .interactive) {
+            let granted = ContinuousClock.now
+            try await load()
+            let resident = ContinuousClock.now
+            return (try await run(), granted - requested, resident - granted)
+        }
+        diagnostics.inferenceWaitDuration += wait
+        diagnostics.modelLoadDuration += loading
+        return value
+    }
+
     // MARK: - Query captioning
 
     /// The query with its images replaced by their captions — see
@@ -214,17 +233,19 @@ extension SemanticSearchEngine {
         diagnostics: inout SearchDiagnostics
     ) async throws -> SearchQuery {
         let images = query.images
-        let captions = try await withInference(priority: .interactive) {
-            try await self.makeResident(captioner: captioner)
-            var captions: [String?] = []
-            for image in images {
-                try Task.checkCancellation()
-                let caption = try await captioner.caption(image)
-                    .trimmingCharacters(in: .whitespacesAndNewlines)
-                captions.append(caption.isEmpty ? nil : caption)
-            }
-            return captions
-        }
+        let captions = try await withResidentModel(
+            diagnostics: &diagnostics,
+            load: { try await self.makeResident(captioner: captioner) },
+            run: {
+                var captions: [String?] = []
+                for image in images {
+                    try Task.checkCancellation()
+                    let caption = try await captioner.caption(image)
+                        .trimmingCharacters(in: .whitespacesAndNewlines)
+                    captions.append(caption.isEmpty ? nil : caption)
+                }
+                return captions
+            })
         let written = captions.compactMap { $0 }
         guard !written.isEmpty else { return query }
         diagnostics.queryCaptions = written
@@ -430,10 +451,10 @@ extension SemanticSearchEngine {
 
                         // Load and embed under one permit: between two, another
                         // job's residency switch could release the model again.
-                        output = try await withInference(priority: .interactive) {
-                            try await self.makeResident(embedder: provider)
-                            return try await provider.embed(input)
-                        }
+                        output = try await withResidentModel(
+                            diagnostics: &diagnostics,
+                            load: { try await self.makeResident(embedder: provider) },
+                            run: { try await provider.embed(input) })
                         outputs[instruction] = output
                     }
                     guard !output.vector.isEmpty else {
@@ -635,10 +656,10 @@ extension SemanticSearchEngine {
         // `makeResident`: the embedder is released before the reranker loads,
         // at the cost of a reload on the next query.
         let batch = candidates
-        let scores = try await withInference(priority: .interactive) {
-            try await self.makeResident(reranker: reranker)
-            return try await reranker.score(query: rerankQuery, candidates: batch)
-        }
+        let scores = try await withResidentModel(
+            diagnostics: &diagnostics,
+            load: { try await self.makeResident(reranker: reranker) },
+            run: { try await reranker.score(query: rerankQuery, candidates: batch) })
         guard scores.count == candidates.count else {
             throw SemanticSearchError.providerReturnedNoOutput(
                 await reranker.identity.modelIdentity)

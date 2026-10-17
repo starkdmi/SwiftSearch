@@ -74,6 +74,31 @@ public struct SearchAnswer: Codable, Sendable {
     public var files: [FileHit]
     /// Anything the caller should know about how complete the answer is.
     public var notes: [String]
+    /// Where the time went. Not encoded: an agent reading the answer has no
+    /// use for it.
+    public var timings: SearchTimings? = nil
+
+    enum CodingKeys: String, CodingKey { case query, files, notes }
+}
+
+/// Where a search's time went, summed over its rounds, for a caller that
+/// shows or logs it.
+public struct SearchTimings: Sendable {
+    /// Waiting for the models to be prepared: the launch-time sync loads them.
+    public var preparing: Duration = .zero
+    /// Searches run: one unless a long document crowded the first.
+    public var rounds = 0
+    /// Query embedding and retrieval, the model calls' waits and loads
+    /// included.
+    public var retrieval: Duration = .zero
+    /// The reranker, its wait and load included.
+    public var rerank: Duration = .zero
+    /// Waiting for the inference permit, held by another search or an ingest.
+    public var inferenceWait: Duration = .zero
+    /// Loading models a release had unloaded.
+    public var modelLoad: Duration = .zero
+    public var rerankedCandidates = 0
+    public var total: Duration = .zero
 }
 
 public struct FileEntry: Codable, Sendable, Equatable {
@@ -476,13 +501,17 @@ public actor Library {
         in query: FileQuery = FileQuery(), within file: String? = nil, limit: Int = 10,
         reranks: Bool = true
     ) async throws -> SearchAnswer {
+        let started = ContinuousClock.now
+        var timings = SearchTimings()
         var scope: ItemID?
         if let file { scope = try await indexed(file).0 }
         var images: [ImagePayload] = []
         if let image {
             images.append(.fileURL(try await queryPicture(image, fromAnywhere: imageFromAnywhere)))
         }
+        let preparing = ContinuousClock.now
         try await prepare()
+        timings.preparing = ContinuousClock.now - preparing
         let searchQuery = SearchQuery(text: text, images: images)
         let matchesPerFile = scope == nil ? 3 : limit
         let filter = bounded(query.filter)
@@ -509,7 +538,14 @@ public actor Library {
                 } else {
                     try await engine.search(searchQuery, options: options)
                 }
-            for note in self.notes(from: results.diagnostics) where !notes.contains(note) {
+            let diagnostics = results.diagnostics
+            timings.rounds += 1
+            timings.retrieval += diagnostics.retrievalDuration
+            timings.rerank += diagnostics.rerankDuration
+            timings.inferenceWait += diagnostics.inferenceWaitDuration
+            timings.modelLoad += diagnostics.modelLoadDuration
+            timings.rerankedCandidates += diagnostics.rerankedCandidates
+            for note in self.notes(from: diagnostics) where !notes.contains(note) {
                 notes.append(note)
             }
             let before = files.count
@@ -556,7 +592,8 @@ public actor Library {
         }
         if isSyncing { notes.append("indexing is still running; results may be incomplete") }
         if settings.folders.isEmpty { notes.append("the library has no folders yet") }
-        return SearchAnswer(query: text, files: files, notes: notes)
+        timings.total = ContinuousClock.now - started
+        return SearchAnswer(query: text, files: files, notes: notes, timings: timings)
     }
 
     /// One ranking over every round: a later round's file the reranker

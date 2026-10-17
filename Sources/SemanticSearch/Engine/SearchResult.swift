@@ -209,6 +209,15 @@ public struct SearchDiagnostics: Sendable {
     public var retrievalDuration: Duration
     public var rerankDuration: Duration
     public var totalDuration: Duration
+    /// Waiting for the inference permit — behind another search, an ingest
+    /// batch or a release — summed over the query's model calls. Like
+    /// ``modelLoadDuration``, counted in ``totalDuration`` too, and in
+    /// ``retrievalDuration`` or ``rerankDuration`` for the embedder and the
+    /// reranker.
+    public var inferenceWaitDuration: Duration = .zero
+    /// Making the models resident: next to nothing when they are, a full load
+    /// after a release or under sequential residency.
+    public var modelLoadDuration: Duration = .zero
     /// Spaces that were skipped, and why. A space missing from a search shows
     /// up here rather than silently narrowing the result set.
     public var skippedSpaces: [SkippedSpace]
