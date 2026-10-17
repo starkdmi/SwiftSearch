@@ -15,6 +15,38 @@ import SemanticSearchApple
 // lost: a batch-1 pass of a hundred tokens already fills the GPU, and padding
 // adds work (53.2 s against 48.5 s on the experiment's workload).
 
+/// Scores submitted to the GPU and not yet read, at most two strides of them.
+/// Submitted all at once, a search its caller had given up on scored its whole
+/// pool — over a second for fifty candidates — while the next search waited
+/// for the model. With two strides queued the older is read, which the GPU has
+/// had the newer one's time to finish, and cancellation is checked before more
+/// go in.
+struct PendingScores {
+    static let stride = 8
+
+    private var pending: [(index: Int, score: MLXArray)] = []
+    private var scores: [Float]
+
+    init(count: Int) {
+        scores = [Float](repeating: .nan, count: count)
+    }
+
+    mutating func append(_ index: Int, _ score: MLXArray) throws {
+        pending.append((index, score))
+        guard pending.count >= 2 * Self.stride else { return }
+        for (index, score) in pending.prefix(Self.stride) {
+            scores[index] = score.item(Float.self)
+        }
+        pending.removeFirst(Self.stride)
+        try Task.checkCancellation()
+    }
+
+    consuming func finish() -> [Float] {
+        for (index, score) in pending { scores[index] = score.item(Float.self) }
+        return scores
+    }
+}
+
 /// Loads a checkpoint's safetensors into `model`, quantizing the layers the
 /// checkpoint stores quantized. `nil` when the checkpoint has an untied
 /// `lm_head`: the fast path scores with two rows of the input embedding, which
@@ -168,7 +200,7 @@ final class FastVisionRerankScorer {
             groups[key, default: []].append(index)
         }
 
-        var pending: [(Int, MLXArray)] = []
+        var pending = PendingScores(count: prompts.count)
         for key in order {
             let members = groups[key]!
             let first = prompts[members[0]]
@@ -225,13 +257,10 @@ final class FastVisionRerankScorer {
                 // Submitted without waiting, so the CPU builds the next
                 // candidate while the GPU runs this one.
                 asyncEval(s)
-                pending.append((candidate.index, s))
+                try pending.append(candidate.index, s)
             }
         }
-
-        var scores = [Float](repeating: .nan, count: prompts.count)
-        for (index, s) in pending { scores[index] = s.item(Float.self) }
-        return scores
+        return pending.finish()
     }
 
     /// Features of one image, from the cache or the vision tower. Lazy: the
@@ -394,18 +423,16 @@ final class FastTextRerankScorer {
             asyncEval(kv.flatMap { [$0.k, $0.v] })
             past = kv
         }
-        var pending: [(Int, MLXArray)] = []
+        var pending = PendingScores(count: rows.count)
         for (index, row) in rows.enumerated().sorted(by: { $0.element.count < $1.element.count }) {
             guard
                 case .scores(let s) = forward(
                     Array(row[shared...]), start: shared, past: past, scoring: true)
             else { throw FastScoringError.unexpectedOutput }
             asyncEval(s)
-            pending.append((index, s))
+            try pending.append(index, s)
         }
-        var scores = [Float](repeating: .nan, count: rows.count)
-        for (index, s) in pending { scores[index] = s.item(Float.self) }
-        return scores
+        return pending.finish()
     }
 
     private func forward(_ tokens: [Int], start: Int, past: [LayerKeysValues]?, scoring: Bool)
