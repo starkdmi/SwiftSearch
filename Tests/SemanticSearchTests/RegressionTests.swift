@@ -350,19 +350,23 @@ struct ResidencyRegressionTests {
 
     @Test("A search reports the time it waited behind another for the permit")
     func searchReportsPermitWait() async throws {
-        let provider = SlowEmbeddingProvider()
+        let provider = GatedQueryEmbeddingProvider()
         let engine = try await SemanticSearchEngine(
             configuration: EngineConfiguration(
                 spaces: [EmbeddingSpaceConfiguration(id: "s", provider: provider)]))
         try await engine.upsert([textItem("a", "alpha beta")])
 
+        // The first search holds the only permit until the gate opens. With a
+        // sleep instead, the order was the scheduler's, and the test failed
+        // when the suite ran under load.
         let options = SearchOptions(mode: .denseOnly)
         let first = Task { try await engine.search("alpha", options: options) }
-        try await Task.sleep(for: .milliseconds(50))
-        // The first search holds the only permit for its 300 ms embedding.
-        let second = try await engine.search("beta", options: options)
+        await provider.waitUntilHolding()
+        let second = Task { try await engine.search("beta", options: options) }
+        try await Task.sleep(for: .milliseconds(300))
+        await provider.open()
         _ = try await first.value
-        #expect(second.diagnostics.inferenceWaitDuration >= .milliseconds(150))
+        #expect(try await second.value.diagnostics.inferenceWaitDuration >= .milliseconds(100))
     }
 
     @Test("Idle models are released after the configured timeout")
@@ -769,6 +773,58 @@ actor SlowLoadingEmbeddingProvider: EmbeddingProvider {
     func embed(_ inputs: [EmbeddingInput]) async throws -> [EmbeddingOutput] {
         guard prepared else {
             throw SemanticSearchError.providerNotPrepared("slow-loading-embedder")
+        }
+        return try await inner.embed(inputs)
+    }
+}
+
+/// Holds the first query it embeds until `open()`, so a search keeps the
+/// inference permit for as long as a test needs; documents pass.
+actor GatedQueryEmbeddingProvider: EmbeddingProvider {
+    private let inner = HashingEmbeddingProvider()
+    private var prepared = false
+    private var isOpen = false
+    private var isHolding = false
+    private var holding: CheckedContinuation<Void, Never>?
+    private var gate: CheckedContinuation<Void, Never>?
+
+    var descriptor: EmbeddingSpaceDescriptor {
+        EmbeddingSpaceDescriptor(
+            modelIdentity: "gated-embedder", tokenizerVersion: "t", preprocessingVersion: "p",
+            pooling: "sum", normalized: true, dimensions: 64)
+    }
+    var capabilities: EmbeddingCapabilities {
+        EmbeddingCapabilities(acceptsText: true, maximumBatchSize: 8, maximumInputTokens: 512)
+    }
+    var isPrepared: Bool { prepared }
+
+    func prepare() async throws {
+        try await inner.prepare()
+        prepared = true
+    }
+
+    func release() async { prepared = false }
+
+    func waitUntilHolding() async {
+        if isHolding { return }
+        await withCheckedContinuation { holding = $0 }
+    }
+
+    func open() {
+        isOpen = true
+        gate?.resume()
+        gate = nil
+    }
+
+    func embed(_ inputs: [EmbeddingInput]) async throws -> [EmbeddingOutput] {
+        let isQuery = inputs.contains {
+            if case .query = $0.role { true } else { false }
+        }
+        if isQuery, !isOpen {
+            isHolding = true
+            holding?.resume()
+            holding = nil
+            await withCheckedContinuation { gate = $0 }
         }
         return try await inner.embed(inputs)
     }
