@@ -46,7 +46,7 @@ let package = Package(
         // These are the `HubApi` and tokenizers it used before 3.0, so
         // downloads keep their layout (HubIntegration.swift).
         .package(url: "https://github.com/huggingface/swift-transformers", from: "1.3.0"),
-        .package(url: "https://github.com/starkdmi/OmniShotCutCoreML", from: "0.1.0"),
+        .package(url: "https://github.com/starkdmi/OmniShotCutCoreML", from: "0.1.1"),
         .package(url: "https://github.com/FluidInference/FluidAudio", .upToNextMinor(from: "0.12.6")),
         .package(url: "https://github.com/modelcontextprotocol/swift-sdk", .upToNextMinor(from: "0.12.1")),
         .package(url: "https://github.com/apple/swift-argument-parser", from: "1.3.0"),
